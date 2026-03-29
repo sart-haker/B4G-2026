@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import { DEMO_PATIENT_ID } from '../lib/demoUser';
 import type { Appointment } from '../types';
 
 const STATUS_CONFIG = {
@@ -44,7 +43,7 @@ export default function Appointments() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'requested' | 'confirmed' | 'done' | 'cancelled'>('all');
 
-  const activeUserId = DEMO_PATIENT_ID;
+  const activeUserId = profile?.id;
 
   useEffect(() => {
     async function load() {
@@ -99,11 +98,10 @@ export default function Appointments() {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize transition-colors ${
-              filter === f
-                ? 'bg-primary-600 text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize transition-colors ${filter === f
+              ? 'bg-primary-600 text-white'
+              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
           >
             {f}
           </button>
@@ -161,11 +159,11 @@ export default function Appointments() {
                       {appt.selected_time
                         ? `Scheduled for ${appt.selected_time}`
                         : new Date(appt.createdAt).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
                     </p>
                   </div>
                 </div>

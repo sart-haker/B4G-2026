@@ -1,5 +1,3 @@
-import { DEMO_PATIENT_ID } from '../lib/demoUser';
-
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -13,9 +11,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import type { Appointment, Patient, Doctor } from '../types';
-
-type ProfileType = Patient | Doctor;
+import type { Appointment } from '../types';
+import { isDoctor } from '../types';
 
 type AppointmentWithRelations = Appointment & {
   doctors?: {
@@ -28,8 +25,6 @@ type AppointmentWithRelations = Appointment & {
   } | null;
 };
 
-const isDoctor = (p: ProfileType): p is Doctor => 'speciality' in p;
-
 export default function Dashboard() {
   const { profile } = useAuth();
   const location = useLocation();
@@ -37,7 +32,7 @@ export default function Dashboard() {
   const [appointments, setAppointments] = useState<AppointmentWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const activeUserId = DEMO_PATIENT_ID;
+  const activeUserId = profile?.id;
 
   useEffect(() => {
     async function load() {
@@ -91,7 +86,11 @@ export default function Dashboard() {
   };
 
   const isPatient = !profile || !isDoctor(profile as any);
-  const firstName = profile?.fullName?.split(' ')[0];
+  const nameParts = profile?.fullName?.split(' ') || [];
+  // For doctors: prepend "Dr." to first name (e.g., "Dr. Sarah"), for patients: take first word (e.g., "John")
+  const displayName = profile && isDoctor(profile as any)
+    ? `Dr. ${nameParts[0]}`
+    : nameParts[0];
 
   const currentAppointments = appointments.filter(
     (a) => a.status === 'booked' || a.status === 'confirmed'
@@ -116,7 +115,7 @@ export default function Dashboard() {
 
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 text-white">
         <h1 className="text-2xl font-bold mb-1">
-          Welcome back, {firstName}! 👋
+          Welcome back, {displayName}! 👋
         </h1>
         <p className="text-primary-100">
           {isPatient

@@ -245,38 +245,34 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Patient-specific fields */}
-            {role === 'patient' && (
-              <>
-                <div>
-                  <label className="label">Gender</label>
-                  <select
-                    className="input"
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                  >
-                    <option value="">Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                    <option value="prefer_not_to_say">Prefer not to say</option>
-                  </select>
-                </div>
+            {/* Gender and Age - for both roles */}
+            <div>
+              <label className="label">Gender</label>
+              <select
+                className="input"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+              </select>
+            </div>
 
-                <div>
-                  <label className="label">Age</label>
-                  <input
-                    type="number"
-                    className="input"
-                    placeholder="25"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    min="0"
-                    max="150"
-                  />
-                </div>
-              </>
-            )}
+            <div>
+              <label className="label">Age</label>
+              <input
+                type="number"
+                className="input"
+                placeholder="25"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                min="0"
+                max="150"
+              />
+            </div>
 
             {/* Doctor-specific fields */}
             {role === 'doctor' && (
