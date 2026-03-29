@@ -1,14 +1,15 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
+
 
 import appointmentsRouter from './routes/appointments';
 import forumRouter from './routes/forum';
 import profileRouter from './routes/profile';
 import reportsRouter from './routes/reports';
 
-dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
