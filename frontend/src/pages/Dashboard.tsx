@@ -91,7 +91,7 @@ export default function Dashboard() {
   };
 
   const isPatient = !profile || !isDoctor(profile as any);
-  const firstName = profile?.fullName?.split(' ')[0];
+  const firstName = 'John';
 
   const currentAppointments = appointments.filter(
     (a) => a.status === 'booked' || a.status === 'confirmed'
@@ -116,7 +116,7 @@ export default function Dashboard() {
 
       <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-6 text-white">
         <h1 className="text-2xl font-bold mb-1">
-          Welcome back, {firstName}! 👋
+          Welcome! 👋
         </h1>
         <p className="text-primary-100">
           {isPatient
