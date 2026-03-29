@@ -14,7 +14,7 @@ export default function ReportResult() {
       <h1>Final Structured Report</h1>
 
       <pre style={{ whiteSpace: 'pre-wrap' }}>
-        {JSON.stringify(report.formatted_report, null, 2)}
+        {JSON.stringify(report.pre_appointment_report, null, 2)}
       </pre>
 
       <h3>Recommended Speciality</h3>

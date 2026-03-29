@@ -9,7 +9,7 @@ CREATE TABLE public.appointment_data (
   needAsap boolean DEFAULT false,
   follow_up_questions jsonb,
   follow_up_answers jsonb,
-  formatted_report jsonb,
+  pre_appointment_report jsonb,
   recommended_speciality character varying,
   selected_time character varying,
   post_appointment_report jsonb,
@@ -18,6 +18,7 @@ CREATE TABLE public.appointment_data (
   patientId uuid,
   doctorId uuid,
   id uuid NOT NULL DEFAULT gen_random_uuid(),
+  initial_prompt text,
   CONSTRAINT appointment_data_pkey PRIMARY KEY (id),
   CONSTRAINT appointment_data_patient_id_fkey FOREIGN KEY (patientId) REFERENCES public.patients(id),
   CONSTRAINT appointment_data_doctor_id_fkey FOREIGN KEY (doctorId) REFERENCES public.doctors(id)
@@ -34,6 +35,9 @@ CREATE TABLE public.doctors (
   reviewCount integer DEFAULT 0,
   location character varying,
   id uuid NOT NULL DEFAULT gen_random_uuid(),
+  password character varying,
+  gender character varying,
+  age smallint,
   CONSTRAINT doctors_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.forum_comments (
@@ -69,5 +73,6 @@ CREATE TABLE public.patients (
   age smallint,
   phone character varying,
   id uuid NOT NULL DEFAULT gen_random_uuid(),
+  password character varying,
   CONSTRAINT patients_pkey PRIMARY KEY (id)
 );

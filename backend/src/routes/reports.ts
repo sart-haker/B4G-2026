@@ -84,7 +84,7 @@ router.post('/:id/follow-up-answers', async (req, res) => {
       .from('appointment_data')
       .update({
         follow_up_answers: answers,
-        formatted_report: finalReport,
+        pre_appointment_report: finalReport,
         recommended_speciality: finalReport.recommended_speciality,
         status: 'report_ready',
       })
