@@ -1,11 +1,11 @@
 # Build4Good '26 - Nurser-E
 
-An AI-powered patient-side healthcare web app that streamlines communication with doctors and organizes appointments.
+An AI-powered healthcare app that serves as a one-stop shop for patients by streamlining communication with doctors, appointment scheduling, providing a reddit-style discussions forum etc.
 
 ## Features
 
 - **Doctor Seek** – Describe symptoms via text, photos, and video; answer smart AI-generated follow-up questions; receive a clean structured pre-appointment report and doctor suggestions.
-- **Appointments** – Request appointments, view status, doctor's pre-appointment report view, and "Appointment Done" workflow.
+- **Appointments** – Request appointments, view status, doctors can view pre-appointment report beforehand.
 - **Post-Appointment** – Upload prescription, auto-store structured medical history, rate your doctor.
 - **Community Forum** – Healthcare-focused Reddit-style community with posts, comments, and upvotes.
 - **Patient Profile** – Full medical history, past appointments, viewable by doctors.
@@ -30,18 +30,7 @@ B4G-2026/
 
 ## Getting Started
 
-### 1. Supabase Setup
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run the migration file in the Supabase SQL editor:
-   ```
-   supabase/migrations/001_initial_schema.sql
-   ```
-3. Create two Storage buckets in Supabase:
-   - `symptom-media` (public)
-   - `medical-docs` (public)
-
-### 2. Frontend
+### 1. Frontend
 
 ```bash
 cd frontend
@@ -51,7 +40,7 @@ npm install
 npm run dev
 ```
 
-### 3. Backend
+### 2. Backend
 
 ```bash
 cd backend
@@ -65,17 +54,11 @@ The frontend runs on `http://localhost:5173` and the backend on `http://localhos
 
 ## Database Schema
 
-See [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql) for the full schema.
+See [`supabase/migrations/002_current_schema.sql`](supabase/migrations/002_current_schema.sql) for the full schema.
 
 Key tables:
-- `profiles` – Extends Supabase Auth users with role (patient/doctor), bio, health info
-- `symptom_reports` – Stores structured pre-appointment reports with photos/video URLs
-- `appointments` – Tracks appointment lifecycle (requested → confirmed → done)
-- `medical_records` – Prescription data and medical history per appointment
-- `doctor_ratings` – Post-appointment doctor ratings
+- `patients` – Supabase Auth users signed up as patients, bio, health info etc.
+- `doctors` – Users signed up as doctors, bio, speciality, etc.
+- `appointment_data` – Stores all appointment related data, like structured pre-appointment reports with photos/video URLs, tracks appointment lifecycle, post-appointment reports, doctor's feedback etc.
 - `forum_posts` / `forum_comments` – Community forum content
-
-## Doctor Type Suggestion
-
-The app uses keyword-based rule matching to suggest the most appropriate type of doctor (e.g., Cardiologist, Dermatologist, Neurologist). This is designed to be swappable with an AI/LLM backend call.
 
