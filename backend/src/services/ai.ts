@@ -1,6 +1,12 @@
 import { openai } from '../lib/openai';
 
-export type IntakeReport = {
+export type InitialIntakeResult = {
+  recommended_speciality: string;
+  follow_up_questions: string[];
+  draft_summary: string;
+};
+
+export type FinalIntakeReport = {
   chief_complaint: string;
   summary: string;
   symptoms: string[];
@@ -11,19 +17,18 @@ export type IntakeReport = {
   possible_conditions: string[];
   recommended_speciality: string;
   urgency: 'routine' | 'urgent' | 'emergency';
-  follow_up_questions: string[];
 };
 
-export async function analyzePatientDescription(
+export async function generateFollowUpQuestions(
   description: string
-): Promise<IntakeReport> {
+): Promise<InitialIntakeResult> {
   const response = await openai.responses.create({
     model: 'gpt-4.1-mini',
     input: [
       {
         role: 'system',
         content:
-          'You are helping structure patient intake information. Do not diagnose with certainty. Return only valid JSON matching the requested schema.',
+          'You are a medical intake assistant. Do not diagnose with certainty. Extract a likely speciality, a short draft summary, and 3 to 5 follow-up questions. Return only JSON matching the schema.',
       },
       {
         role: 'user',
@@ -33,7 +38,64 @@ export async function analyzePatientDescription(
     text: {
       format: {
         type: 'json_schema',
-        name: 'patient_intake_report',
+        name: 'initial_intake',
+        strict: true,
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            recommended_speciality: { type: 'string' },
+            draft_summary: { type: 'string' },
+            follow_up_questions: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+          required: [
+            'recommended_speciality',
+            'draft_summary',
+            'follow_up_questions',
+          ],
+        },
+      },
+    },
+  });
+
+  return JSON.parse(response.output_text) as InitialIntakeResult;
+}
+
+export async function finalizeIntakeReport(args: {
+  description: string;
+  followUpQuestions: string[];
+  followUpAnswers: string[];
+}): Promise<FinalIntakeReport> {
+  const { description, followUpQuestions, followUpAnswers } = args;
+
+  const qaText = followUpQuestions
+    .map((q, i) => `Q: ${q}\nA: ${followUpAnswers[i] || ''}`)
+    .join('\n\n');
+
+  const response = await openai.responses.create({
+    model: 'gpt-4.1-mini',
+    input: [
+      {
+        role: 'system',
+        content:
+          'You are a medical intake assistant. Do not diagnose with certainty. Build a structured intake report from the original patient description plus follow-up answers. Return only JSON matching the schema.',
+      },
+      {
+        role: 'user',
+        content: `Original patient description:
+${description}
+
+Follow-up responses:
+${qaText}`,
+      },
+    ],
+    text: {
+      format: {
+        type: 'json_schema',
+        name: 'final_intake_report',
         strict: true,
         schema: {
           type: 'object',
@@ -64,10 +126,6 @@ export async function analyzePatientDescription(
               type: 'string',
               enum: ['routine', 'urgent', 'emergency'],
             },
-            follow_up_questions: {
-              type: 'array',
-              items: { type: 'string' },
-            },
           },
           required: [
             'chief_complaint',
@@ -80,57 +138,11 @@ export async function analyzePatientDescription(
             'possible_conditions',
             'recommended_speciality',
             'urgency',
-            'follow_up_questions',
           ],
         },
       },
     },
   });
 
-  const jsonText = response.output_text;
-  return JSON.parse(jsonText) as IntakeReport;
+  return JSON.parse(response.output_text) as FinalIntakeReport;
 }
-
-/*
-
-export type IntakeReport = {
-  chief_complaint: string;
-  summary: string;
-  symptoms: string[];
-  duration: string;
-  severity: string;
-  medications: string[];
-  relevant_history: string[];
-  possible_conditions: string[];
-  recommended_speciality: string;
-  urgency: 'routine' | 'urgent' | 'emergency';
-  follow_up_questions: string[];
-};
-
-export async function analyzePatientDescription(
-  description: string
-): Promise<IntakeReport> {
-  console.log('Mock AI input:', description);
-
-  return {
-    chief_complaint: 'Itchy rash on both arms',
-    summary:
-      'Patient reports a 2-week history of red, itchy rash on both arms, worse after showering, with recent detergent change.',
-    symptoms: ['itching', 'redness', 'rash'],
-    duration: '2 weeks',
-    severity: 'moderate',
-    medications: [],
-    relevant_history: ['recent detergent change'],
-    possible_conditions: ['contact dermatitis', 'eczema', 'allergic skin reaction'],
-    recommended_speciality: 'Dermatology',
-    urgency: 'routine',
-    follow_up_questions: [
-      'Has the rash spread to any other parts of your body?',
-      'Have you used any new soaps, lotions, or detergents recently?',
-      'Is the rash painful, warm, or swollen?',
-      'Have you had fever or other symptoms with the rash?'
-    ]
-  };
-}
-
-*/

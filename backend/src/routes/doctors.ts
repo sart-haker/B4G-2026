@@ -32,4 +32,27 @@ router.get('/match', async (req, res) => {
   }
 });
 
+router.get('/:id/reports', async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+
+    const { data, error } = await supabase
+      .from('appointment_data')
+      .select(`
+        *,
+        patients (*)
+      `)
+      .eq('doctorId', doctorId)
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json(data);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to load doctor reports' });
+  }
+});//2nd route to get all reports for a doctor, used in doctor profile page to show past appointments and patient details
+
 export default router;

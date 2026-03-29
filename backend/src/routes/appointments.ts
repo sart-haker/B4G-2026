@@ -58,4 +58,27 @@ router.patch('/:id/done', requireAuth, async (req: Request, res: Response) => {
   return res.json(data);
 });
 
+router.get('/patient/:id/appointments', async (req, res) => {
+  try {
+    const patientId = req.params.id;
+
+    const { data, error } = await supabase
+      .from('appointment_data')
+      .select(`
+        *,
+        doctors (*)
+      `)
+      .eq('patientId', patientId)
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json(data);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || 'Failed to load appointments' });
+  }
+});
+
 export default router;

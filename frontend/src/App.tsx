@@ -12,6 +12,10 @@ import Community from './pages/Community';
 import PostDetail from './pages/PostDetail';
 import Profile from './pages/Profile';
 import PatientIntake from './pages/PatientIntake';
+import FollowUpQuestions from './pages/followUpQuestions';
+import ReportResult from './pages/reportResult';
+import PatientDashboard from './pages/patientDashboard';
+
 
 const queryClient = new QueryClient();
 
@@ -32,6 +36,9 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/intake" element={<PatientIntake />} />
+      <Route path="/follow-up" element={<FollowUpQuestions />} />
+      <Route path="/report-result" element={<ReportResult />} />
+      <Route path="/patient-dashboard" element={<PatientDashboard />} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route
         element={
