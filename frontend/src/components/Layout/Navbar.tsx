@@ -12,20 +12,27 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import type { Patient, Doctor } from '../../types';
 
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/doctor-seek', label: 'Doctor Seek', icon: Search },
-  { to: '/appointments', label: 'Appointments', icon: Calendar },
-  { to: '/community', label: 'Community', icon: Users },
-  { to: '/profile', label: 'My Profile', icon: User },
-];
+type ProfileType = Patient | Doctor;
+const isDoctor = (p: ProfileType): p is Doctor => 'speciality' in p;
 
 export default function Navbar() {
   const { profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isPatient = profile && !isDoctor(profile as any);
+
+  // Build nav items dynamically based on role
+  const navItems = [
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ...(isPatient ? [{ to: '/doctor-seek', label: 'Doctor Seek', icon: Search }] : []),
+    { to: '/appointments', label: 'Appointments', icon: Calendar },
+    { to: '/community', label: 'Community', icon: Users },
+    { to: '/profile', label: 'My Profile', icon: User },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,11 +55,10 @@ export default function Navbar() {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  location.pathname.startsWith(to)
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname.startsWith(to)
                     ? 'bg-primary-50 text-primary-700'
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 {label}
@@ -66,7 +72,7 @@ export default function Navbar() {
               <span className="hidden sm:block text-sm text-gray-600">
                 {profile.fullName}
                 <span className="ml-1 text-xs text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full capitalize">
-                  {profile.role}
+                  {isDoctor(profile) ? 'doctor' : 'patient'}
                 </span>
               </span>
             )}
@@ -96,11 +102,10 @@ export default function Navbar() {
               key={to}
               to={to}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
-                location.pathname.startsWith(to)
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${location.pathname.startsWith(to)
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-gray-600 hover:bg-gray-100'
-              }`}
+                }`}
             >
               <Icon className="w-4 h-4" />
               {label}

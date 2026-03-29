@@ -30,58 +30,82 @@ export default function ProfilePage() {
   }, [targetId]);
 
   async function load(uid: string) {
-    // Try patient first
-    let { data: p } = await supabase.from('patients').select('*').eq('id', uid).single();
+    // In DEMO MODE: check if this is the current user's profile
+    if (isOwnProfile && myProfile) {
+      setProfile(myProfile);
+      setEditForm(myProfile);
+    } else {
+      // Try to load from Supabase if viewing another profile
+      let { data: p } = await supabase.from('patients').select('*').eq('id', uid).single();
 
-    if (!p) {
-      // Try doctor
-      const { data: d } = await supabase.from('doctors').select('*').eq('id', uid).single();
-      p = d;
-    }
+      if (!p) {
+        const { data: d } = await supabase.from('doctors').select('*').eq('id', uid).single();
+        p = d;
+      }
 
-    if (p) {
-      setProfile(p as ProfileType);
-      setEditForm(p);
+      if (p) {
+        setProfile(p as ProfileType);
+        setEditForm(p);
+      }
     }
 
     // Fetch appointments
-    const { data: appts } = await supabase
-      .from('appointment_data')
-      .select('*')
-      .eq(isDoctor(p) ? 'doctorId' : 'patientId', uid)
-      .order('createdAt', { ascending: false });
+    if (profile) {
+      const { data: appts } = await supabase
+        .from('appointment_data')
+        .select('*')
+        .eq(isDoctor(profile) ? 'doctorId' : 'patientId', uid)
+        .order('createdAt', { ascending: false });
 
-    setAppointments((appts as Appointment[]) || []);
+      setAppointments((appts as Appointment[]) || []);
+    }
     setLoading(false);
   }
 
   const handleSave = async () => {
-    if (!myProfile || !profile) return;
+    if (!profile) return;
     setSaving(true);
 
-    const table = isDoctor(profile) ? 'doctors' : 'patients';
-    const updates: Record<string, any> = {
-      fullName: editForm.fullName,
-      phone: editForm.phone,
-      location: editForm.location,
-      gender: editForm.gender,
-    };
+    try {
+      // In DEMO MODE: update local profile in auth context
+      if (isOwnProfile && myProfile) {
+        const updates: Record<string, any> = {
+          fullName: editForm.fullName,
+          phone: editForm.phone,
+          location: editForm.location,
+          gender: editForm.gender,
+        };
 
-    if (isDoctor(editForm)) {
-      updates.speciality = editForm.speciality;
+        if (isDoctor(editForm)) {
+          updates.speciality = editForm.speciality;
+        }
+
+        if (!isDoctor(editForm) && (editForm as any).medicalHistory) {
+          updates.medicalHistory = (editForm as any).medicalHistory;
+        }
+
+        // Update local state
+        const updatedProfile = { ...profile, ...updates } as ProfileType;
+        setProfile(updatedProfile);
+        setEditForm(updatedProfile);
+
+        // For real Supabase: try to persist (will fail in DEMO MODE but that's ok)
+        const table = isDoctor(profile) ? 'doctors' : 'patients';
+        await supabase.from(table).update(updates).eq('id', profile.id);
+
+        await refreshProfile();
+        setEditing(false);
+      } else {
+        // Trying to edit someone else's profile - not allowed in DEMO MODE
+        alert('You can only edit your own profile.');
+        setSaving(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+    } finally {
+      setSaving(false);
     }
-
-    const { error } = await supabase
-      .from(table)
-      .update(updates)
-      .eq('id', myProfile.id);
-
-    if (!error) {
-      setEditing(false);
-      await refreshProfile();
-      await load(myProfile.id);
-    }
-    setSaving(false);
   };
 
   const avgRating = appointments.length

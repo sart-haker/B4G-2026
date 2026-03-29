@@ -89,50 +89,111 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, _password: string) => {
-    // DEMO MODE: Skip Supabase auth, create mock user
-    const mockUser: User = {
-      id: 'demo-user-' + Math.random().toString(36).substr(2, 9),
-      email,
-      email_confirmed_at: new Date().toISOString(),
-      phone: '',
-      confirmed_at: new Date().toISOString(),
-      last_sign_in_at: new Date().toISOString(),
-      app_metadata: { provider: 'demo', providers: ['demo'] },
-      user_metadata: { role: 'patient' },
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    setUser(mockUser);
+  const signIn = async (email: string, password: string) => {
+    // Try to find user in database
+    // First try patients table
+    let { data: patientData } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('email', email)
+      .single();
 
-    // Create mock patient profile for demo
-    const mockPatient: Patient = {
-      id: mockUser.id,
-      fullName: 'Demo User',
-      email,
-      phone: '555-1234',
-      location: 'San Francisco, CA',
-      gender: 'Not specified',
-      age: 30,
-      password: 'demo-password',
-      medicalHistory: {},
-      createdAt: new Date().toISOString(),
-    };
-    setProfile(mockPatient);
-    setSession({
-      user: mockUser,
-      access_token: 'demo-token',
-      refresh_token: 'demo-refresh',
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      token_type: 'bearer',
-    } as unknown as Session);
+    if (patientData) {
+      // Found in patients table - verify password
+      if (patientData.password !== password) {
+        throw new Error('Invalid email or password');
+      }
+      // Create mock user object from database patient
+      const mockUser: User = {
+        id: patientData.id,
+        email,
+        email_confirmed_at: new Date().toISOString(),
+        phone: patientData.phone,
+        confirmed_at: new Date().toISOString(),
+        last_sign_in_at: new Date().toISOString(),
+        app_metadata: { provider: 'demo', providers: ['demo'] },
+        user_metadata: { role: 'patient' },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setUser(mockUser);
+      setProfile(patientData as Patient);
+      setSession({
+        user: mockUser,
+        access_token: 'demo-token',
+        refresh_token: 'demo-refresh',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer',
+      } as unknown as Session);
+      return;
+    }
+
+    // Try doctors table
+    const { data: doctorData } = await supabase
+      .from('doctors')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (doctorData) {
+      // Found in doctors table - verify password
+      if (doctorData.password !== password) {
+        throw new Error('Invalid email or password');
+      }
+      // Create mock user object from database doctor
+      const mockUser: User = {
+        id: doctorData.id,
+        email,
+        email_confirmed_at: new Date().toISOString(),
+        phone: doctorData.phone,
+        confirmed_at: new Date().toISOString(),
+        last_sign_in_at: new Date().toISOString(),
+        app_metadata: { provider: 'demo', providers: ['demo'] },
+        user_metadata: { role: 'doctor' },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setUser(mockUser);
+      setProfile(doctorData as Doctor);
+      setSession({
+        user: mockUser,
+        access_token: 'demo-token',
+        refresh_token: 'demo-refresh',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer',
+      } as unknown as Session);
+      return;
+    }
+
+    // User not found in database
+    throw new Error('Invalid email or password');
   };
 
   const signUp = async (_email: string, _password: string, profileData: PatientSignUpData | DoctorSignUpData, role: 'patient' | 'doctor') => {
-    // DEMO MODE: Skip Supabase auth, create mock user with profile data
+    // DEMO MODE: Create user locally and try to save to database
     const mockUserId = 'demo-user-' + Math.random().toString(36).substr(2, 9);
+
+    // Create profile with the provided data
+    const mockProfile = {
+      id: mockUserId,
+      ...profileData,
+      createdAt: new Date().toISOString(),
+    } as Patient | Doctor;
+
+    // Try to save to database
+    try {
+      const table = role === 'patient' ? 'patients' : 'doctors';
+      await supabase.from(table).insert([mockProfile]);
+    } catch (error) {
+      console.error('Failed to save to database during signup:', error);
+      // Continue anyway - user is still logged in locally
+    }
+
+    // Create mock auth user
     const mockUser: User = {
       id: mockUserId,
       email: profileData.email,
@@ -147,14 +208,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updated_at: new Date().toISOString(),
     };
     setUser(mockUser);
-
-    // Create mock profile with the provided data
-    const mockProfile = {
-      id: mockUserId,
-      ...profileData,
-      createdAt: new Date().toISOString(),
-    } as Patient | Doctor;
-
     setProfile(mockProfile);
     setSession({
       user: mockUser,

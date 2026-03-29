@@ -49,10 +49,6 @@ export default function Login() {
     }
   };
 
-  const handleDemoLogin = () => {
-    navigate('/intake');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-health-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -113,17 +109,6 @@ export default function Login() {
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
-
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full py-2.5 mt-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Continue with Demo Patient
-            </button>
-
-
-
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">

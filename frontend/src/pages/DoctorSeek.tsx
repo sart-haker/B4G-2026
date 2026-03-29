@@ -1,26 +1,40 @@
-import { DEMO_PATIENT_ID } from '../lib/demoUser';
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Camera, Video, MessageSquare, FileText,
   ArrowRight, ArrowLeft, CheckCircle, Stethoscope, Upload, X
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { createIntakeReport, submitFollowUpAnswers } from '../lib/api';
+import type { Patient, Doctor } from '../types';
 
-const TEST_PATIENT_ID = DEMO_PATIENT_ID;
 const STEPS = ['Symptoms', 'Photos', 'Video', 'Follow-up', 'Review'];
 
 type FollowUpQuestion = string;
+type ProfileType = Patient | Doctor;
+const isDoctor = (p: ProfileType): p is Doctor => 'speciality' in p;
 
 export default function DoctorSeek() {
+  const { profile } = useAuth();
   const navigate = useNavigate();
+
+  // Only patients can use Doctor Seek
+  const isPatient = profile && !isDoctor(profile as any);
+
+  if (!profile || !isPatient) {
+    return (
+      <div className="max-w-2xl mx-auto card p-8 text-center">
+        <p className="text-red-600 font-medium">Only patients can use Doctor Seek.</p>
+        <p className="text-gray-500 text-sm mt-2">Please switch to a patient account or create one to access this feature.</p>
+      </div>
+    );
+  }
 
   const [step, setStep] = useState(0);
   const [symptomsText, setSymptomsText] = useState('');
-  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [_photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [_videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
 
   const [reportId, setReportId] = useState<string>('');
@@ -83,7 +97,7 @@ export default function DoctorSeek() {
         setSubmitting(true);
 
         const data = await createIntakeReport({
-          patientId: TEST_PATIENT_ID,
+          patientId: profile?.id || '',
           title: 'Doctor Consultation',
           description: symptomsText,
           needAsap: false,
@@ -156,13 +170,12 @@ export default function DoctorSeek() {
         {STEPS.map((label, idx) => (
           <div key={label} className="flex items-center gap-2 flex-1">
             <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold flex-shrink-0 ${
-                idx < step
-                  ? 'bg-green-500 text-white'
-                  : idx === step
+              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold flex-shrink-0 ${idx < step
+                ? 'bg-green-500 text-white'
+                : idx === step
                   ? 'bg-primary-600 text-white'
                   : 'bg-gray-200 text-gray-500'
-              }`}
+                }`}
             >
               {idx < step ? <CheckCircle className="w-4 h-4" /> : idx + 1}
             </div>
