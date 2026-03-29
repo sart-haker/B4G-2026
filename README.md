@@ -1,10 +1,10 @@
-# B4G-2026 – MedConnect
+# Build4Good '26 - Nurser
 
 An AI-powered patient-side healthcare web app that streamlines communication with doctors and organizes appointments.
 
 ## Features
 
-- **Doctor Seek** – Describe symptoms via text, photos, and video; answer smart AI-generated follow-up questions; receive a clean structured pre-appointment report and doctor-type suggestion.
+- **Doctor Seek** – Describe symptoms via text, photos, and video; answer smart AI-generated follow-up questions; receive a clean structured pre-appointment report and doctor suggestions.
 - **Appointments** – Request appointments, view status, doctor's pre-appointment report view, and "Appointment Done" workflow.
 - **Post-Appointment** – Upload prescription, auto-store structured medical history, rate your doctor.
 - **Community Forum** – Healthcare-focused Reddit-style community with posts, comments, and upvotes.
