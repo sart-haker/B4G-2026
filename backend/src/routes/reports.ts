@@ -2,6 +2,7 @@
 //first job is to accept patient symptoms form data. Then create a row in reports
 
 import { Router } from 'express';
+import { supabase } from '../lib/supabase';
 
 const router = Router();
 
@@ -9,7 +10,6 @@ router.get('/test', (_req, res) => {
   res.json({ message: 'reports route works' });
 });
 
-// POST /api/reports
 router.post('/', async (req, res) => {
   try {
     const {
@@ -24,24 +24,31 @@ router.post('/', async (req, res) => {
       needAsap,
     } = req.body;
 
-    // For now, just log it so you know route works
-    console.log('Incoming report:', req.body);
+    const { data, error } = await supabase
+      .from('appointment_data')
+      .insert([
+        {
+          patientId,
+          title,
+          patient_description,
+          symptoms,
+          medications,
+          duration,
+          severity,
+          history,
+          needAsap,
+          status: 'draft',
+        },
+      ])
+      .select()
+      .single();
 
-    // Later this is where you insert into Supabase
-    return res.status(201).json({
-      message: 'Report route works',
-      data: {
-        patientId,
-        title,
-        patient_description,
-        symptoms,
-        medications,
-        duration,
-        severity,
-        history,
-        needAsap,
-      },
-    });
+    if (error) {
+      console.error('Supabase insert error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(201).json(data);
   } catch (error) {
     console.error('Error creating report:', error);
     return res.status(500).json({ error: 'Failed to create report' });
